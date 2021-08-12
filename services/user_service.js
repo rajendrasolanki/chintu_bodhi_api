@@ -1,4 +1,4 @@
-const userRepository = require('./repository/user_repository');
+const userRepository = require('../repository/user_repository');
 
 module.exports.getUser = async (contactNumber) => {
     try{
