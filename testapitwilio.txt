@@ -1,0 +1,96 @@
+const dialogflow = require('dialogflow');
+//const rapidapi = require('rapidapi-connect');
+
+//var rapid = new RapidAPI("chatbottext","dt4YhNzRTJDEdbNvQBMv9dxqMCjKQ0Vo")
+const projectId = 'testchatbot-hgcu';
+const dfConfig = {
+   credentials: {
+       private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/Ojheg+Tr9DX2\nActLRVR9T0EK43qhqq2Z/CzSYlqmT7m8Ro3sysVHMwT8pLKz0a4tOdfJ0A9hVqrl\npZwT4EBTdX6L2rIjIMgHJIzNJLVaBozem5e5GF01FsFE5RoHPY97TWIsKyspUOAl\noil9s0eDTMvle2oQYD7FYNljUjvLbX+gMB5/Ho9kGZAQUbaUSzfqO7C5QwQQUxZG\nyxUfbSLmPhQJgU/7fhZHss7LXIe74YHFRDp/oW2iL1Egy50Y508+Ew71f2QuGhio\nMT5Dv0FCTcMX0mMxwzYfpCjNs+KFuzEgkUhBgBLohSZRCt2bKCNTQUViBBfzK/6p\nYqNmw+5HAgMBAAECggEACP4p7Hfzag1ABGOtNcr64DG781EjUTr/kwBC81ngvXV+\nXJZM0lfu0xxZHbB5Hu+7azEPLtR0BLXYr5gMMPsYy1P5MYaFXhWKkptra7JQPP2V\n3loe1nuI1phNWnoTsUd52eiXt1AIZZcCE4L+xISL1mbkJ9SX9lEwYoPddUhGu5hD\n16lif768oQ0EM0vTpEEusebFwYi19AbJSirTpc783Mj7clW+I2FTfnPemIeh7WUL\ne3Kr4q3t7JBC1CdlxJUY8asJRaElW2AerRTMtj+Xzv8J/HROwS+ujemuLgKb19RN\nJQhuBvpQlhAfYNUUzG/iwNEkbDDF73YIWISj4k56cQKBgQDk+zQi1q2l+zWrvjt7\nPMQQ3vEIzXZUfG2mZABOF2A2oA32Vyx0nAbRHd/GRQAQH06gHWRavjgYYlx/OPR/\nZXG3LrQourG9twHnYjgPMyjIXyyktfVZjJHwENzHhefRQH/jzT3gkxg9HH5m7xwC\n8jJwKMmiGRwdnJbirEkpLI+4gwKBgQDVypfLuElXvCYSekl8n2Rac/7DzgY1P3Ff\nMbE1nld1LkdauLYq2pwT16UYcJRp52pwpjNTGc5JlF3AbY2HW9bRJM12Chf+IumB\nvp/TRrgw5+BqAvssE0w1JYTBfjiPUteLrZFIKqOtOxsPtUpBCJdoWdJn3fzmN6+K\nFZqwo1Tf7QKBgDc7YJgGsFwY/BkxCafwQFrRa9JzvNckLE62UFyFxu9mK/f/jvmR\nqRNH4XIxspIw+wYkENDSkTVQhH8rfc486fEFku9AGR9pxUvKpTsFXBD45AvW2BeB\nkLIXXynBYulWZYLNPt+sm2wiM1sg0eDkCsaDEB/Jbr61xq9mXz9PQFuBAoGBAKjq\n0nbW27QjZ51v24JI2dySC7gfn04RG32QYKixu/5NG3m1udEwOuN+neYqhUkL3FC3\nMJQ3LoN6Y3y30nwhdyB2SJQ8M2rLoN2vhM5E8SFLBEgepN/VO4A+bZ8IIJ41YTLu\nZ3yym/IyYhZOMiYiKKb9WT5R6hDn7J1Ypolr85KdAoGAQ1cytnF801wL+jqAoIFC\nKwx6hQCYrmh4JnhVTCGZDhbg3WO3RMdYjuOzXvi3+BQcMpHPeFDpPT4VL85kchLF\n/Uq8RJnnOGc7AEuGThiSxLQ41T239JJKTZwSDO4K761uqO9jI00J6w2Va8wirr3h\nB2q4qf6x4t+PCfeRrwL7t6s=\n-----END PRIVATE KEY-----\n',
+       client_email: 'dialogflow-clash@mineral-subject-321119.iam.gserviceaccount.com'
+   }
+}
+
+function detectLanguage() {
+   // Function for detecting language of incoming message
+  return Promise.resolve('en')
+}
+
+
+async function detectIntent(query, lang) {
+ // New session client
+ const sessionClient = new dialogflow.SessionsClient(dfConfig);
+ // The path to identify the agent that owns the created intent.
+ const sessionPath = sessionClient.sessionPath(projectId, '123456');
+
+ // The text query request.
+ const request = {
+   session: sessionPath,
+   queryInput: {
+     text: {
+       text: query,
+       languageCode: lang,
+     },
+   },
+ };
+
+ const responses = await sessionClient.detectIntent(request);
+ return responses[0];
+}
+
+async function executeQuery(query, lang) {
+   let queryResult = {}
+   try {
+     console.log(`Sending Query: ${query}`);
+     intentResponse = await detectIntent(query, lang);
+     console.log('Detected intent');
+     console.log(
+       `Intent Name: ${intentResponse.queryResult.intent.displayName} , IntentCont: ${intentResponse.queryResult} `
+     );
+     console
+     // Use the context from this response for next queries
+     queryResult.success = true
+     queryResult.intent = intentResponse.queryResult.intent.displayName;
+     queryResult.parameters = intentResponse.queryResult.parameters;
+     queryResult.resp = intentResponse.queryResult.fulfillmentText;
+   } catch (error) {
+     console.log('executeQuery() error');
+     console.log(error);
+     queryResult.success = false
+   }
+   return queryResult
+}
+
+exports.handler = function(context, event, callback) {
+   detectLanguage(event.Body)
+   .then(language => {
+       console.log(language)
+       let response = ''
+       switch (language) {
+           case 'es':
+               // es español
+               executeQuery(event.Body, 'es')
+               .then(result => {
+                  console.log(result)
+                   if (result.intent === 'schedule-class') {
+                       response = `¡Gracias! Estamos preparando  ${result.parameters.fields.number.numberValue} ${result. parameters.fields.any.stringValue}`;
+                   } else {
+                       response = 'Lo siento, no he entendido. ¿Podría decírmelo otra vez?';
+                   }
+                   callback(null, response);
+               })
+               break;
+           case 'en':
+           executeQuery(event.Body, 'en')
+               .then(result => {
+                  console.log('This is the result.resp',result.resp);
+                   if (result.intent === 'Default Fallback Intent') {      
+                     response = "Sorry, I'm still learning. Could you repeat again?";                 
+                   } else {
+                       response = result.resp
+                   }
+                   callback(null, response);
+               })
+               break;
+          }
+   })
+}
