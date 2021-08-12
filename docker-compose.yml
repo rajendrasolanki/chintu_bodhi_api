@@ -1,0 +1,11 @@
+version: "2"
+
+services: 
+  bodhi-api:
+    image: node:12-alpine
+    container_name: api
+    volumes:
+      - ./chintu_bodhi_api:/root/.
+    ports:
+      - "0.0.0.0:3000:3000"
+    command: "tail -f /dev/null"
