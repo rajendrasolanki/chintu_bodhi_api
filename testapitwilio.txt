@@ -1,96 +1,195 @@
 const dialogflow = require('dialogflow');
-//const rapidapi = require('rapidapi-connect');
-
-//var rapid = new RapidAPI("chatbottext","dt4YhNzRTJDEdbNvQBMv9dxqMCjKQ0Vo")
+const { flow } = require('lodash');
+const request = require('request');
 const projectId = 'testchatbot-hgcu';
 const dfConfig = {
-   credentials: {
-       private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/Ojheg+Tr9DX2\nActLRVR9T0EK43qhqq2Z/CzSYlqmT7m8Ro3sysVHMwT8pLKz0a4tOdfJ0A9hVqrl\npZwT4EBTdX6L2rIjIMgHJIzNJLVaBozem5e5GF01FsFE5RoHPY97TWIsKyspUOAl\noil9s0eDTMvle2oQYD7FYNljUjvLbX+gMB5/Ho9kGZAQUbaUSzfqO7C5QwQQUxZG\nyxUfbSLmPhQJgU/7fhZHss7LXIe74YHFRDp/oW2iL1Egy50Y508+Ew71f2QuGhio\nMT5Dv0FCTcMX0mMxwzYfpCjNs+KFuzEgkUhBgBLohSZRCt2bKCNTQUViBBfzK/6p\nYqNmw+5HAgMBAAECggEACP4p7Hfzag1ABGOtNcr64DG781EjUTr/kwBC81ngvXV+\nXJZM0lfu0xxZHbB5Hu+7azEPLtR0BLXYr5gMMPsYy1P5MYaFXhWKkptra7JQPP2V\n3loe1nuI1phNWnoTsUd52eiXt1AIZZcCE4L+xISL1mbkJ9SX9lEwYoPddUhGu5hD\n16lif768oQ0EM0vTpEEusebFwYi19AbJSirTpc783Mj7clW+I2FTfnPemIeh7WUL\ne3Kr4q3t7JBC1CdlxJUY8asJRaElW2AerRTMtj+Xzv8J/HROwS+ujemuLgKb19RN\nJQhuBvpQlhAfYNUUzG/iwNEkbDDF73YIWISj4k56cQKBgQDk+zQi1q2l+zWrvjt7\nPMQQ3vEIzXZUfG2mZABOF2A2oA32Vyx0nAbRHd/GRQAQH06gHWRavjgYYlx/OPR/\nZXG3LrQourG9twHnYjgPMyjIXyyktfVZjJHwENzHhefRQH/jzT3gkxg9HH5m7xwC\n8jJwKMmiGRwdnJbirEkpLI+4gwKBgQDVypfLuElXvCYSekl8n2Rac/7DzgY1P3Ff\nMbE1nld1LkdauLYq2pwT16UYcJRp52pwpjNTGc5JlF3AbY2HW9bRJM12Chf+IumB\nvp/TRrgw5+BqAvssE0w1JYTBfjiPUteLrZFIKqOtOxsPtUpBCJdoWdJn3fzmN6+K\nFZqwo1Tf7QKBgDc7YJgGsFwY/BkxCafwQFrRa9JzvNckLE62UFyFxu9mK/f/jvmR\nqRNH4XIxspIw+wYkENDSkTVQhH8rfc486fEFku9AGR9pxUvKpTsFXBD45AvW2BeB\nkLIXXynBYulWZYLNPt+sm2wiM1sg0eDkCsaDEB/Jbr61xq9mXz9PQFuBAoGBAKjq\n0nbW27QjZ51v24JI2dySC7gfn04RG32QYKixu/5NG3m1udEwOuN+neYqhUkL3FC3\nMJQ3LoN6Y3y30nwhdyB2SJQ8M2rLoN2vhM5E8SFLBEgepN/VO4A+bZ8IIJ41YTLu\nZ3yym/IyYhZOMiYiKKb9WT5R6hDn7J1Ypolr85KdAoGAQ1cytnF801wL+jqAoIFC\nKwx6hQCYrmh4JnhVTCGZDhbg3WO3RMdYjuOzXvi3+BQcMpHPeFDpPT4VL85kchLF\n/Uq8RJnnOGc7AEuGThiSxLQ41T239JJKTZwSDO4K761uqO9jI00J6w2Va8wirr3h\nB2q4qf6x4t+PCfeRrwL7t6s=\n-----END PRIVATE KEY-----\n',
-       client_email: 'dialogflow-clash@mineral-subject-321119.iam.gserviceaccount.com'
-   }
+    credentials: {
+        private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/Ojheg+Tr9DX2\nActLRVR9T0EK43qhqq2Z/CzSYlqmT7m8Ro3sysVHMwT8pLKz0a4tOdfJ0A9hVqrl\npZwT4EBTdX6L2rIjIMgHJIzNJLVaBozem5e5GF01FsFE5RoHPY97TWIsKyspUOAl\noil9s0eDTMvle2oQYD7FYNljUjvLbX+gMB5/Ho9kGZAQUbaUSzfqO7C5QwQQUxZG\nyxUfbSLmPhQJgU/7fhZHss7LXIe74YHFRDp/oW2iL1Egy50Y508+Ew71f2QuGhio\nMT5Dv0FCTcMX0mMxwzYfpCjNs+KFuzEgkUhBgBLohSZRCt2bKCNTQUViBBfzK/6p\nYqNmw+5HAgMBAAECggEACP4p7Hfzag1ABGOtNcr64DG781EjUTr/kwBC81ngvXV+\nXJZM0lfu0xxZHbB5Hu+7azEPLtR0BLXYr5gMMPsYy1P5MYaFXhWKkptra7JQPP2V\n3loe1nuI1phNWnoTsUd52eiXt1AIZZcCE4L+xISL1mbkJ9SX9lEwYoPddUhGu5hD\n16lif768oQ0EM0vTpEEusebFwYi19AbJSirTpc783Mj7clW+I2FTfnPemIeh7WUL\ne3Kr4q3t7JBC1CdlxJUY8asJRaElW2AerRTMtj+Xzv8J/HROwS+ujemuLgKb19RN\nJQhuBvpQlhAfYNUUzG/iwNEkbDDF73YIWISj4k56cQKBgQDk+zQi1q2l+zWrvjt7\nPMQQ3vEIzXZUfG2mZABOF2A2oA32Vyx0nAbRHd/GRQAQH06gHWRavjgYYlx/OPR/\nZXG3LrQourG9twHnYjgPMyjIXyyktfVZjJHwENzHhefRQH/jzT3gkxg9HH5m7xwC\n8jJwKMmiGRwdnJbirEkpLI+4gwKBgQDVypfLuElXvCYSekl8n2Rac/7DzgY1P3Ff\nMbE1nld1LkdauLYq2pwT16UYcJRp52pwpjNTGc5JlF3AbY2HW9bRJM12Chf+IumB\nvp/TRrgw5+BqAvssE0w1JYTBfjiPUteLrZFIKqOtOxsPtUpBCJdoWdJn3fzmN6+K\nFZqwo1Tf7QKBgDc7YJgGsFwY/BkxCafwQFrRa9JzvNckLE62UFyFxu9mK/f/jvmR\nqRNH4XIxspIw+wYkENDSkTVQhH8rfc486fEFku9AGR9pxUvKpTsFXBD45AvW2BeB\nkLIXXynBYulWZYLNPt+sm2wiM1sg0eDkCsaDEB/Jbr61xq9mXz9PQFuBAoGBAKjq\n0nbW27QjZ51v24JI2dySC7gfn04RG32QYKixu/5NG3m1udEwOuN+neYqhUkL3FC3\nMJQ3LoN6Y3y30nwhdyB2SJQ8M2rLoN2vhM5E8SFLBEgepN/VO4A+bZ8IIJ41YTLu\nZ3yym/IyYhZOMiYiKKb9WT5R6hDn7J1Ypolr85KdAoGAQ1cytnF801wL+jqAoIFC\nKwx6hQCYrmh4JnhVTCGZDhbg3WO3RMdYjuOzXvi3+BQcMpHPeFDpPT4VL85kchLF\n/Uq8RJnnOGc7AEuGThiSxLQ41T239JJKTZwSDO4K761uqO9jI00J6w2Va8wirr3h\nB2q4qf6x4t+PCfeRrwL7t6s=\n-----END PRIVATE KEY-----\n',
+        client_email: 'dialogflow-clash@mineral-subject-321119.iam.gserviceaccount.com'
+    }
 }
-
+const flows = {
+    "welcome":{
+        "body":"",
+        "next_question":"dbflow-intro",
+        "expected_reply":"yes"
+    },
+    "dbflow-intro":{
+        "body":"Hello kid!\nWelcome to the marvel and DC universe.\nThis is the character list we have\n"+
+            "Some marvel + some Dc character\n Name                     Floor    Universe\nCaptain America     - 1      Marvel"+
+            "\nIron Man                  - 2      Marvel\nSuperman               - 3      DC\nChintu                     - 4      Marvel\n"+
+            "\nHi Groot Again!\nCan you help me retrieve data from the marvel universe?\n        1. Yes     2. No",
+        "next_question":"dbflow-first_question",
+        "expected_reply":"yes"
+    },
+    "dbflow-first_question":{
+        "body":"Can you please tell me which character is on floor 2. Please type in your answer below\n\n    1.- Chintu 2.-Captain America 3.- Iron Man 4.- Superman",
+        "next_question":"dbflow-second_question",
+        "expected_reply":"1,2,3,4"
+    },
+    "dbflow-second_question":{
+        "body":"Hello kid, we meet again!\n\nNow to win the battle with Thanos, we need to add Gamora with some extra special powers. Can you help me to find floor where we can replace chintu with below options:"+
+        "\n1. Floor4  2. Floor2  3. Floor3",
+        "next_question":"dbflow-third_question",
+        "expected_reply":"1,2,3"
+    },
+    "dbflow-third_question":{
+        "body":"Hi there! It’s Groot\nTo protect the planet, we need to send one DC character to planet A\n Choose from below options:\n"+
+        "1. Iron Man  2.Gamora 3.Superman 4. Captain America",
+        "next_question":"dbflow-end",
+        "expected_reply":"1,2,3"
+    },
+    "schedule-class":{
+        "body":"",
+        "next_question":"missing-before_scheduled",
+        "expected_reply":"1"
+    },
+    "missing-before_scheduled":{
+        "body":"Awesome! Let me check the available slots",
+        "next_question":"missing-before_send",
+        "expected_reply":""
+    },
+    "dbflow-end": {
+        "body": "Thank you for responding !",
+        "url":"https://hackathon-chintu2-dynamic-content.s3.ap-south-1.amazonaws.com/image-343.png",
+        "next_question": "",
+        "expected_reply": ""
+    },
+    /*"default": {
+        "question": "Thank you !",
+        "next_question": null,
+        "expected_reply": null
+    }*/
+}
+let lastIntent = ''
 function detectLanguage() {
-   // Function for detecting language of incoming message
-  return Promise.resolve('en')
+    // Function for detecting language of incoming message
+    return Promise.resolve('en')
 }
-
-
 async function detectIntent(query, lang) {
- // New session client
- const sessionClient = new dialogflow.SessionsClient(dfConfig);
- // The path to identify the agent that owns the created intent.
- const sessionPath = sessionClient.sessionPath(projectId, '123456');
-
- // The text query request.
- const request = {
-   session: sessionPath,
-   queryInput: {
-     text: {
-       text: query,
-       languageCode: lang,
-     },
-   },
- };
-
- const responses = await sessionClient.detectIntent(request);
- return responses[0];
+    // New session client
+    const sessionClient = new dialogflow.SessionsClient(dfConfig);
+    // The path to identify the agent that owns the created intent.
+    const sessionPath = sessionClient.sessionPath(projectId, '123456');
+    // The text query request.
+    const request = {
+        session: sessionPath,
+        queryInput: {
+            text: {
+                text: query,
+                languageCode: lang,
+            },
+        },
+    };
+    const responses = await sessionClient.detectIntent(request);
+    return responses[0];
 }
-
 async function executeQuery(query, lang) {
-   let queryResult = {}
-   try {
-     console.log(`Sending Query: ${query}`);
-     intentResponse = await detectIntent(query, lang);
-     console.log('Detected intent');
-     console.log(
-       `Intent Name: ${intentResponse.queryResult.intent.displayName} , IntentCont: ${intentResponse.queryResult} `
-     );
-     console
-     // Use the context from this response for next queries
-     queryResult.success = true
-     queryResult.intent = intentResponse.queryResult.intent.displayName;
-     queryResult.parameters = intentResponse.queryResult.parameters;
-     queryResult.resp = intentResponse.queryResult.fulfillmentText;
-   } catch (error) {
-     console.log('executeQuery() error');
-     console.log(error);
-     queryResult.success = false
-   }
-   return queryResult
+    let queryResult = {}
+    try {
+        console.log(`Sending Query: ${query}`);
+        intentResponse = await detectIntent(query, lang);
+        console.log('Detected intent');
+        console.log(
+            `Intent Name: ${intentResponse.queryResult.intent.displayName} , IntentCont: ${intentResponse.queryResult}`
+        );
+        console
+        // Use the context from this response for next queries
+        queryResult.success = true
+        queryResult.intent = intentResponse.queryResult.intent.displayName;
+        queryResult.parameters = intentResponse.queryResult.parameters;
+        queryResult.resp = intentResponse.queryResult.fulfillmentText;
+    } catch (error) {
+        console.log('executeQuery() error');
+        console.log(error);
+        queryResult.success = false
+    }
+    return queryResult
 }
-
-exports.handler = function(context, event, callback) {
-   detectLanguage(event.Body)
-   .then(language => {
-       console.log(language)
-       let response = ''
-       switch (language) {
-           case 'es':
-               // es español
-               executeQuery(event.Body, 'es')
-               .then(result => {
-                  console.log(result)
-                   if (result.intent === 'schedule-class') {
-                       response = `¡Gracias! Estamos preparando  ${result.parameters.fields.number.numberValue} ${result. parameters.fields.any.stringValue}`;
-                   } else {
-                       response = 'Lo siento, no he entendido. ¿Podría decírmelo otra vez?';
-                   }
-                   callback(null, response);
-               })
-               break;
-           case 'en':
-           executeQuery(event.Body, 'en')
-               .then(result => {
-                  console.log('This is the result.resp',result.resp);
-                   if (result.intent === 'Default Fallback Intent') {      
-                     response = "Sorry, I'm still learning. Could you repeat again?";                 
-                   } else {
-                       response = result.resp
-                   }
-                   callback(null, response);
-               })
-               break;
-          }
-   })
+let checkFlow = (response,body,from) => {
+    console.log("gonnacheck",lastIntent)
+    if(lastIntent!="" && flows[lastIntent].next_question!=""){
+        console.log("c1");
+        let nextFlow = flows[lastIntent].next_question;
+        if(!flows[lastIntent].expected_reply.includes(body)){
+            console.log("cr",lastIntent,flows[lastIntent].expected_reply,body)
+            return response;
+        }else{
+            lastIntent = nextFlow;
+        }
+        if(flows[nextFlow].url!="" && flows[nextFlow].url != undefined){
+            console.log("cu1");
+            request({
+            url: `http://65.2.126.206:3000/sendMedia`,
+            method: 'POST',
+            body:{
+                "to":from,
+                "url":flows[nextFlow].url,
+                "body":flows[nextFlow].body
+            }
+            }, function (error, response, body) {
+                if(!error)
+                    resolve(body);
+            })
+        }else{
+            console.log("c1not url",lastIntent,flows[lastIntent].body);
+            response = flows[lastIntent].body;
+            //lastIntent = nextFlow
+            return response;
+        }
+    }else{
+        return response;
+    }
+}
+exports.handler = function (context, event, callback) {
+    detectLanguage(event.Body)
+        .then(language => {
+            let response = ''
+            switch (language) {
+                case 'en':
+                    //console.log('This is the event ', event);
+                    executeQuery(event.Body, 'en')
+                        .then(result => {
+                            console.log("i1");
+                            if (result.intent === 'Default Fallback Intent') {
+                                console.log("i11",lastIntent);
+                                response = "Sorry, I'm still learning. Could you repeat again?";
+                                response = checkFlow(response,event.Body,event.From);
+                            } else if (result.intent === 'Default Welcome Intent') {
+                                console.log("i22",lastIntent);
+                                response = "I see that you're new around here, can I ask you some questions?";
+                                lastIntent = 'welcome';
+                            } else if ( result.intent === 'missing-before_scheduled'){
+                                response = checkFlow(result.resp,event.Body,event.From);
+                                return new Promise(resolve => {
+                                    let body = "Dear kid,\nThank you for registering for WhiteHat Jr’s Coding Certification Trial Class! Your teacher is now allocated.\n"+
+                                    "To join the class:\nGo to www.whjr.run on Laptop/Computer\nEnter code 1564 to join the class\n"+
+                                    "You will receive the Coding Fundamentals Certificate from WhiteHat Jr as soon as you complete the class.\nFor help, mail support@whitehatjr.com.\n"+
+                                    "Thank you,\nThe WhiteHat Jr Education Team"
+                                    request({
+                                        url: `http://65.2.126.206:3000/sendMedia`,
+                                        method: 'POST',
+                                        body:{
+                                            "to":event.From,
+                                            "url":"",
+                                            "body":body
+                                        }
+                                        }, function (error, response, body) {
+                                            if(!error)
+                                                resolve(body);
+                                        })
+                                    }).then(value => {
+                                        lastIntent = nextFlow;
+                                        return "";
+                                    })
+                            } else {
+                                console.log("i33",lastIntent);
+                                response = result.resp
+                                response = checkFlow(response,event.Body,event.From);
+                            }
+                            callback(null, response);
+                        })
+                    break;
+            }
+        })
 }
