@@ -42,11 +42,11 @@ const flows = {
     "schedule-class":{
         "body":"",
         "next_question":"missing-before_scheduled",
-        "expected_reply":"1"
+        "expected_reply":"1,2,3"
     },
     "missing-before_scheduled":{
         "body":"Awesome! Let me check the available slots",
-        "next_question":"missing-before_send",
+        "next_question":"",
         "expected_reply":""
     },
     "dbflow-end": {
@@ -118,7 +118,7 @@ let checkFlow = (response,body,from) => {
             lastIntent = nextFlow;
         }
         if(flows[nextFlow].url!="" && flows[nextFlow].url != undefined){
-            console.log("cu1");
+            console.log("cu1");           
             request({
             url: `http://65.2.126.206:3000/sendMedia`,
             method: 'POST',
@@ -126,7 +126,7 @@ let checkFlow = (response,body,from) => {
                 "to":from,
                 "url":flows[nextFlow].url,
                 "body":flows[nextFlow].body
-            }
+            } 
             }, function (error, response, body) {
                 if(!error)
                     resolve(body);
@@ -155,38 +155,42 @@ exports.handler = function (context, event, callback) {
                                 console.log("i11",lastIntent);
                                 response = "Sorry, I'm still learning. Could you repeat again?";
                                 response = checkFlow(response,event.Body,event.From);
-                            } else if (result.intent === 'Default Welcome Intent') {
-                                console.log("i22",lastIntent);
-                                response = "I see that you're new around here, can I ask you some questions?";
-                                lastIntent = 'welcome';
-                            } else if ( result.intent === 'missing-before_scheduled'){
-                                response = checkFlow(result.resp,event.Body,event.From);
-                                return new Promise(resolve => {
+                                if ( lastIntent === 'missing-before_scheduled'){
+                                    //response = checkFlow(result.resp,event.Body,event.From);                                
                                     let body = "Dear kid,\nThank you for registering for WhiteHat Jr’s Coding Certification Trial Class! Your teacher is now allocated.\n"+
                                     "To join the class:\nGo to www.whjr.run on Laptop/Computer\nEnter code 1564 to join the class\n"+
                                     "You will receive the Coding Fundamentals Certificate from WhiteHat Jr as soon as you complete the class.\nFor help, mail support@whitehatjr.com.\n"+
                                     "Thank you,\nThe WhiteHat Jr Education Team"
+                                    console.log("sending req")
                                     request({
                                         url: `http://65.2.126.206:3000/sendMedia`,
                                         method: 'POST',
                                         body:{
                                             "to":event.From,
-                                            "url":"",
-                                            "body":body
-                                        }
+                                            "url":"https://hackathon-chintu2-dynamic-content.s3.ap-south-1.amazonaws.com/image-627.png",
+                                            "content":body
+                                        } 
                                         }, function (error, response, body) {
+                                            if(response){
+                                                console.log(response)
+                                            }
                                             if(!error)
                                                 resolve(body);
                                         })
-                                    }).then(value => {
-                                        lastIntent = nextFlow;
-                                        return "";
-                                    })
+                                } 
+                            } else if (result.intent === 'Default Welcome Intent') {
+                                console.log("i22",lastIntent);
+                                response = "I see that you're new around here, can I ask you some questions?";
+                                lastIntent = 'welcome';                                            
                             } else {
+                                if (lastIntent === ""){
+                                    lastIntent = result.intent
+                                    console.log("setting intent", lastIntent,result.intent);
+                                }
                                 console.log("i33",lastIntent);
                                 response = result.resp
                                 response = checkFlow(response,event.Body,event.From);
-                            }
+                            }                            
                             callback(null, response);
                         })
                     break;
