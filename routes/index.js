@@ -1,7 +1,8 @@
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
-const accountSid = 'ACfe67de9fe0cb163a2199c42e7d530292';
-const authToken = '13c2711b54ca76b2bc9fe915527960d4';
+const accountSid = process.env.SID;
+const authToken = process.env.AUTH;
 const client = require('twilio')(accountSid, authToken);
 /* GET home page. */
 router.get('/', function(req, res, next) {
